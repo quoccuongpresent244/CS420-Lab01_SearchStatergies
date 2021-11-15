@@ -13,7 +13,7 @@ def ucs(graph, initial, goal):
     frontier = queue.PriorityQueue()
     frontier_list = []
 
-    expanded_state = [] 
+    explored_nodes = [] 
     frontier.put((0, initial))
     frontier_list.append(initial)
 
@@ -21,15 +21,15 @@ def ucs(graph, initial, goal):
         current_path_cost, current_path = frontier.get()
 
         frontier_list.remove(current_path)
-        expanded_state.append(current_path)
+        explored_nodes.append(current_path)
 
         if (current_path == goal): 
-            return getPath(path, initial, goal), expanded_state, len(expanded_state)
+            return getPath(path, initial, goal), explored_nodes, len(explored_nodes)
 
 
 
         for neighbour in graph[current_path]:
-            if neighbour not in expanded_state and neighbour not in frontier_list: 
+            if neighbour not in explored_nodes and neighbour not in frontier_list: 
                 frontier.put((current_path_cost+1, neighbour))
                 frontier_list.append(neighbour)
                 path[neighbour] = current_path
@@ -54,22 +54,22 @@ def GBFS(graph, initial, goal):
     frontier = queue.PriorityQueue()
     frontier_list = []
 
-    expanded = []
+    explored_nodes = []
     frontier.put((get_manhattan_heuristic(initial, goal), initial))
     frontier_list.append(initial)
 
     while frontier.empty: 
         current = frontier.get()
-
         frontier_list.remove(current[1])
 
         if (current[1] == goal):
-            return getPath(path, initial, goal), expanded, len(expanded)
+            return getPath(path, initial, goal), explored_nodes, len(explored_nodes)
 
-        expanded.append(current[1])
+        explored_nodes.append(current[1])
+        
         for neighbour in graph[current[1]]: 
             heuristic = get_manhattan_heuristic(neighbour, goal)
-            if neighbour not in expanded and neighbour not in frontier_list:
+            if neighbour not in explored_nodes and neighbour not in frontier_list:
                 frontier.put((heuristic, neighbour))
                 frontier_list.append(neighbour)
                 path[neighbour] = current[1]
@@ -85,27 +85,27 @@ def Astar(graph, initial, goal):
     frontier = queue.PriorityQueue()
     frontier_list = []
 
-    expanded_state = []
-    frontier.put((0, initial))
+    explored_nodes = []
+    frontier.put((get_manhattan_heuristic(initial, goal), initial))
     frontier_list.append(initial)
 
     while frontier.empty:
-        current = frontier.get() 
-        frontier_list.remove(current[1])
+        current_path_cost, current_node = frontier.get() 
+        path_cost = current_path_cost - get_manhattan_heuristic(current_node, goal) + 1
 
-        if current[1] == goal: 
-            return getPath(path, initial, goal), expanded_state, len(expanded_state)
+        frontier_list.remove(current_node)
+        explored_nodes.append(current_node)
 
-        expanded_state.append(current[1])
+        if current_node == goal: 
+            return getPath(path, initial, goal), explored_nodes, len(explored_nodes)
 
-        for neighbour in graph[current[1]]:
-            path_cost = current[0] - get_manhattan_heuristic(current[1], goal) + 1
+        for neighbour in graph[current_node]:
             path_cost_heuristic = path_cost + get_manhattan_heuristic(neighbour, goal)
 
-            if neighbour not in expanded_state and neighbour not in frontier_list: 
+            if neighbour not in explored_nodes and neighbour not in frontier_list: 
                 frontier.put((path_cost_heuristic, neighbour))
                 frontier_list.append(neighbour)
-                path[neighbour] = current[1]
+                path[neighbour] = current_node
             elif neighbour in frontier_list: 
                 for node in frontier.queue: 
                     if node[1] == neighbour and node[0] > path_cost_heuristic: 
@@ -126,7 +126,16 @@ def read_graph():
         data = [int(x) for x in data]
         graph[i]= data
 
-    return graph
+    f.close()
+    return graph, goal
 
-graph = read_graph()
-print(ucs(graph, 0, 61))
+def output(path_returned, explored_nodes, escape_time):
+    f = open('../OUTPUT/output.txt', 'w')
+    f.write('Escape time: ' +  str(escape_time) + ' mins\n')
+    f.write('Explored nodes: '+ str(explored_nodes)+ '\n')
+    f.write('Path returned: ' + str(path_returned)+ '\n')
+    f.close()
+
+graph, goal = read_graph()
+path_returned, explored_nodes, escape_time = Astar(graph, 0, goal)
+output(path_returned, explored_nodes, escape_time)

@@ -1,7 +1,12 @@
 import queue
 
-def getPath(graph, begin ,end):
-    return None
+def getPath(path, begin ,end):
+    result = [end]
+    current = end
+    while current != begin:
+        current = path[current]
+        result.insert(0, current)
+    return result
 
 def ucs(graph, initial, goal):
     path = [0]* len(graph)
@@ -12,25 +17,26 @@ def ucs(graph, initial, goal):
     frontier.put((0, initial))
     frontier_list.append(initial)
 
-    while len(frontier) > 0 :
-        current = frontier.get()
+    while len(frontier_list) > 0 :
+        current_path_cost, current_path = frontier.get()
 
-        frontier_list.remove(current[1])
+        frontier_list.remove(current_path)
+        expanded_state.append(current_path)
 
-        if (current[1] == goal): 
-            return getPath(path, initial, goal), expanded_state
+        if (current_path == goal): 
+            return getPath(path, initial, goal), expanded_state, len(expanded_state)
 
-        expanded_state.append(current[1])
 
-        for neighbour in graph[current[1]]:
+
+        for neighbour in graph[current_path]:
             if neighbour not in expanded_state and neighbour not in frontier_list: 
-                frontier.put((current[0]+1, neighbour))
+                frontier.put((current_path_cost+1, neighbour))
                 frontier_list.append(neighbour)
-                path[neighbour] = current[1]
+                path[neighbour] = current_path
             elif neighbour in frontier_list:
                 for node in frontier.queue:
-                    if node[1] == neighbour and node[0] > current[0] + 1:
-                        frontier.queue[frontier.queue.index(node)] = (current[0]+1, neighbour)
+                    if node[1] == neighbour and node[0] > current_path_cost + 1:
+                        frontier.queue[frontier.queue.index(node)] = (current_path_cost+1, neighbour)
 
     return None, None
 
@@ -52,13 +58,13 @@ def GBFS(graph, initial, goal):
     frontier.put((get_manhattan_heuristic(initial, goal), initial))
     frontier_list.append(initial)
 
-    while len(frontier_list) > 0: 
+    while frontier.empty: 
         current = frontier.get()
 
         frontier_list.remove(current[1])
 
         if (current[1] == goal):
-            return getPath(path, initial, goal), expanded
+            return getPath(path, initial, goal), expanded, len(expanded)
 
         expanded.append(current[1])
         for neighbour in graph[current[1]]: 
@@ -80,15 +86,15 @@ def Astar(graph, initial, goal):
     frontier_list = []
 
     expanded_state = []
-    frontier.put((0, goal))
+    frontier.put((0, initial))
     frontier_list.append(initial)
 
-    while len(frontier) > 0:
+    while frontier.empty:
         current = frontier.get() 
         frontier_list.remove(current[1])
 
         if current[1] == goal: 
-            return getPath(path, initial, goal), expanded_state
+            return getPath(path, initial, goal), expanded_state, len(expanded_state)
 
         expanded_state.append(current[1])
 
@@ -107,3 +113,20 @@ def Astar(graph, initial, goal):
 
     return None, None
 
+def read_graph():
+    with open('../INPUT/input.txt') as f:
+        lines = f.readlines()
+
+    size = int(lines.pop(0)) 
+    goal = int(lines.pop(-1))
+    graph = [0]*(size*size)
+
+    for i in range(size*size):
+        data = lines[i].split(' ')
+        data = [int(x) for x in data]
+        graph[i]= data
+
+    return graph
+
+graph = read_graph()
+print(ucs(graph, 0, 61))

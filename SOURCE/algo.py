@@ -114,10 +114,13 @@ def dfs(graph, currentNode, goal, maxDepth, curList, explored_nodes):
         return False
     for neighbour in graph[currentNode]:
         if neighbour not in explored_nodes:
-            if dfs(graph, neighbour, goal, maxDepth-1, curList, explored_nodes):
-                return True
+            if neighbour != goal:
+                if dfs(graph, neighbour, goal, maxDepth-1, curList, explored_nodes):
+                    return True
+                else:
+                    curList.pop()
             else:
-                curList.pop()
+                return True
     return False
 
 def ids(graph, currentNode, goal, maxDepth):
